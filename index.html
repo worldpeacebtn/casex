@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Criminal Case Portal</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Orbitron', 'Courier New', monospace;
+      background: linear-gradient(135deg, #0a0a1f 0%, #1a0a2e 50%, #16003b 100%);
+      color: #e0e0ff;
+      min-height: 100%;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    /* Animated background grid */
+    .grid-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(138, 43, 226, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(138, 43, 226, 0.1) 1px, transparent 1px);
+      background-size: 50px 50px;
+      animation: gridMove 20s linear infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes gridMove {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(50px, 50px); }
+    }
+
+    /* Holographic overlay */
+    .holo-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 30% 50%, rgba(138, 43, 226, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 50%, rgba(75, 0, 130, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 1;
+      animation: holoShift 8s ease-in-out infinite;
+    }
+
+    @keyframes holoShift {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.6; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 60px 40px;
+    }
+
+    /* Header with neon glow */
+    header {
+      text-align: center;
+      margin-bottom: 80px;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 72px;
+      font-weight: 700;
+      background: linear-gradient(45deg, #9d4edd, #c77dff, #7b2cbf);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 0 40px rgba(157, 78, 221, 0.8),
+                   0 0 80px rgba(123, 44, 191, 0.6);
+      letter-spacing: 4px;
+      margin-bottom: 20px;
+      animation: neonPulse 3s ease-in-out infinite;
+    }
+
+    @keyframes neonPulse {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.3); }
+    }
+
+    .subtitle {
+      font-size: 24px;
+      color: #b19cd9;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    /* 3D Card Container */
+    .case-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 40px;
+      margin-bottom: 60px;
+    }
+
+    .case-card {
+      background: linear-gradient(135deg, rgba(26, 10, 46, 0.8) 0%, rgba(22, 0, 59, 0.9) 100%);
+      border: 2px solid rgba(157, 78, 221, 0.3);
+      border-radius: 20px;
+      padding: 40px;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s ease;
+      box-shadow: 0 10px 40px rgba(123, 44, 191, 0.3),
+                  inset 0 0 60px rgba(157, 78, 221, 0.05);
+    }
+
+    .case-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(157, 78, 221, 0.1), transparent);
+      transform: rotate(45deg);
+      animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+      100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    .case-card:hover {
+      transform: translateY(-10px) scale(1.02);
+      border-color: rgba(157, 78, 221, 0.8);
+      box-shadow: 0 20px 60px rgba(123, 44, 191, 0.6),
+                  inset 0 0 80px rgba(157, 78, 221, 0.1),
+                  0 0 40px rgba(157, 78, 221, 0.4);
+    }
+
+    .case-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .case-number {
+      font-size: 16px;
+      color: #7b2cbf;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+
+    .case-status {
+      padding: 8px 20px;
+      background: linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(123, 44, 191, 0.3));
+      border: 1px solid #9d4edd;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #c77dff;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      box-shadow: 0 0 20px rgba(157, 78, 221, 0.4);
+    }
+
+    .case-title {
+      font-size: 28px;
+      color: #e0e0ff;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .case-details {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .detail-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(157, 78, 221, 0.2);
+    }
+
+    .detail-label {
+      color: #b19cd9;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .detail-value {
+      color: #e0e0ff;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    /* Holographic button */
+    .action-button {
+      width: 100%;
+      padding: 16px;
+      margin-top: 30px;
+      background: linear-gradient(135deg, rgba(157, 78, 221, 0.3), rgba(123, 44, 191, 0.4));
+      border: 2px solid #9d4edd;
+      border-radius: 12px;
+      color: #e0e0ff;
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(157, 78, 221, 0.3);
+    }
+
+    .action-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .action-button:hover::before {
+      left: 100%;
+    }
+
+    .action-button:hover {
+      background: linear-gradient(135deg, rgba(157, 78, 221, 0.5), rgba(123, 44, 191, 0.6));
+      box-shadow: 0 0 40px rgba(157, 78, 221, 0.6),
+                  inset 0 0 20px rgba(157, 78, 221, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* 3D Evidence section */
+    .evidence-section {
+      margin-top: 60px;
+      padding: 50px;
+      background: linear-gradient(135deg, rgba(26, 10, 46, 0.6) 0%, rgba(22, 0, 59, 0.7) 100%);
+      border: 2px solid rgba(157, 78, 221, 0.3);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(123, 44, 191, 0.3);
+    }
+
+    .evidence-section::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #9d4edd, transparent);
+      animation: scanline 3s linear infinite;
+    }
+
+    @keyframes scanline {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .section-title {
+      font-size: 36px;
+      color: #c77dff;
+      margin-bottom: 30px;
+      text-align: center;
+      text-shadow: 0 0 20px rgba(157, 78, 221, 0.6);
+    }
+
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+    }
+
+    .evidence-item {
+      background: rgba(26, 10, 46, 0.5);
+      border: 1px solid rgba(157, 78, 221, 0.4);
+      border-radius: 12px;
+      padding: 30px 20px;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .evidence-item:hover {
+      background: rgba(26, 10, 46, 0.8);
+      border-color: #9d4edd;
+      transform: translateY(-5px) scale(1.05);
+      box-shadow: 0 10px 30px rgba(157, 78, 221, 0.4);
+    }
+
+    .evidence-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+      filter: drop-shadow(0 0 10px rgba(157, 78, 221, 0.6));
+    }
+
+    .evidence-label {
+      color: #b19cd9;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    @media (max-width: 768px) {
+      h1 {
+        font-size: 48px;
+      }
+
+      .subtitle {
+        font-size: 18px;
+      }
+
+      .case-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .container {
+        padding: 40px 20px;
+      }
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="grid-background"></div>
+  <div class="holo-overlay"></div>
+  <div class="container">
+   <header>
+    <h1 id="main-title">CRIMINAL INVESTIGATION</h1>
+    <p class="subtitle" id="subtitle">Quantum Forensics Division</p>
+   </header>
+   <div class="case-grid">
+    <div class="case-card">
+     <div class="case-header"><span class="case-number" id="case-number">CASE #47-X9</span> <span class="case-status" id="case-status">ACTIVE</span>
+     </div>
+     <h3 class="case-title" id="investigation-title">Cyber Intrusion Protocol</h3>
+     <div class="case-details">
+      <div class="detail-row"><span class="detail-label">Priority</span> <span class="detail-value">CRITICAL</span>
+      </div>
+      <div class="detail-row"><span class="detail-label">Agent</span> <span class="detail-value">Unit Alpha-7</span>
+      </div>
+      <div class="detail-row"><span class="detail-label">Location</span> <span class="detail-value">Sector 9-B</span>
+      </div>
+      <div class="detail-row"><span class="detail-label">Timeline</span> <span class="detail-value">72 Hours</span>
+      </div>
+     </div><button class="action-button">ACCESS FILES</button>
+    </div>
+    <div class="case-card">
+     <div class="case-header"><span class="case-number">CASE #52-K4</span> <span class="case-status">PENDING</span>
+     </div>
+     <h3 class="case-title">Digital Trace Analysis</h3>
+     <div class="case-details">
+      <div class="detail-row"><span class="detail-label">Priority</span> <span class="detail-value">HIGH</span>
+      </div>
+      <div class="detail-row"><span class="detail-label">Agent</span> <span class="detail-value">Unit Beta-3</span>
+      </div>
+      <div class="detail-row"><span class="detail-label">Location</span> <span class="detail-value">Sector 4-C</span>
+      </div>
+      <div class="detail-row"><span class="detail-label">Timeline</span> <span class="detail-value">48 Hours</span>
+      </div>
+     </div><button class="action-button">ACCESS FILES</button>
+    </div>
+    <div class="case-card">
+     <div class="case-header"><span class="case-number">CASE #63-M2</span> <span class="case-status">REVIEW</span>
+     </div>
+     <h3 class="case-title">Quantum Signature Match</h3>
+     <div class="case-details">
+      <div class="detail-row"><span class="detail-label">Priority</span> <span class="detail-value">MEDIUM</span>
+      </div>
+      <div class="detail-row"><span class="detail-label">Agent</span> <span class="detail-value">Unit Gamma-5</span>
+      </div>
+      <div class="detail-row"><span class="detail-label">Location</span> <span class="detail-value">Sector 2-A</span>
+      </div>
+      <div class="detail-row"><span class="detail-label">Timeline</span> <span class="detail-value">96 Hours</span>
+      </div>
+     </div><button class="action-button">ACCESS FILES</button>
+    </div>
+   </div>
+   <div class="evidence-section">
+    <h2 class="section-title">EVIDENCE DATABASE</h2>
+    <div class="evidence-grid">
+     <div class="evidence-item">
+      <div class="evidence-icon">
+       🔍
+      </div>
+      <div class="evidence-label">
+       Digital Prints
+      </div>
+     </div>
+     <div class="evidence-item">
+      <div class="evidence-icon">
+       💾
+      </div>
+      <div class="evidence-label">
+       Data Fragments
+      </div>
+     </div>
+     <div class="evidence-item">
+      <div class="evidence-icon">
+       🧬
+      </div>
+      <div class="evidence-label">
+       DNA Analysis
+      </div>
+     </div>
+     <div class="evidence-item">
+      <div class="evidence-icon">
+       📡
+      </div>
+      <div class="evidence-label">
+       Signal Trace
+      </div>
+     </div>
+     <div class="evidence-item">
+      <div class="evidence-icon">
+       🎯
+      </div>
+      <div class="evidence-label">
+       Target Lock
+      </div>
+     </div>
+     <div class="evidence-item">
+      <div class="evidence-icon">
+       ⚡
+      </div>
+      <div class="evidence-label">
+       Energy Pattern
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    const defaultConfig = {
+      background_color: "#0a0a1f",
+      surface_color: "#1a0a2e",
+      text_color: "#e0e0ff",
+      primary_action_color: "#9d4edd",
+      secondary_action_color: "#7b2cbf",
+      font_family: "Orbitron",
+      font_size: 16,
+      main_title: "CRIMINAL INVESTIGATION",
+      subtitle: "Quantum Forensics Division",
+      case_number: "CASE #47-X9",
+      case_status: "ACTIVE",
+      investigation_title: "Cyber Intrusion Protocol"
+    };
+
+    let config = {};
+
+    async function onConfigChange(newConfig) {
+      config = newConfig;
+      
+      const customFont = config.font_family || defaultConfig.font_family;
+      const baseFontStack = "'Courier New', monospace";
+      const baseSize = config.font_size || defaultConfig.font_size;
+      
+      document.body.style.fontFamily = `${customFont}, ${baseFontStack}`;
+      document.body.style.fontSize = `${baseSize}px`;
+      
+      const backgroundColor = config.background_color || defaultConfig.background_color;
+      const surfaceColor = config.surface_color || defaultConfig.surface_color;
+      const textColor = config.text_color || defaultConfig.text_color;
+      const primaryActionColor = config.primary_action_color || defaultConfig.primary_action_color;
+      const secondaryActionColor = config.secondary_action_color || defaultConfig.secondary_action_color;
+      
+      document.body.style.background = `linear-gradient(135deg, ${backgroundColor} 0%, ${surfaceColor} 50%, ${secondaryActionColor} 100%)`;
+      document.body.style.color = textColor;
+      
+      const caseCards = document.querySelectorAll('.case-card');
+      caseCards.forEach(card => {
+        card.style.background = `linear-gradient(135deg, ${surfaceColor}cc 0%, ${secondaryActionColor}e6 100%)`;
+        card.style.borderColor = `${primaryActionColor}4d`;
+      });
+      
+      const evidenceSection = document.querySelector('.evidence-section');
+      evidenceSection.style.background = `linear-gradient(135deg, ${surfaceColor}99 0%, ${secondaryActionColor}b3 100%)`;
+      evidenceSection.style.borderColor = `${primaryActionColor}4d`;
+      
+      const buttons = document.querySelectorAll('.action-button');
+      buttons.forEach(button => {
+        button.style.background = `linear-gradient(135deg, ${primaryActionColor}4d, ${secondaryActionColor}66)`;
+        button.style.borderColor = primaryActionColor;
+        button.style.color = textColor;
+      });
+      
+      const h1 = document.getElementById('main-title');
+      h1.style.fontSize = `${baseSize * 4.5}px`;
+      h1.textContent = config.main_title || defaultConfig.main_title;
+      
+      const subtitle = document.getElementById('subtitle');
+      subtitle.style.fontSize = `${baseSize * 1.5}px`;
+      subtitle.textContent = config.subtitle || defaultConfig.subtitle;
+      
+      const caseNumber = document.getElementById('case-number');
+      caseNumber.textContent = config.case_number || defaultConfig.case_number;
+      
+      const caseStatus = document.getElementById('case-status');
+      caseStatus.textContent = config.case_status || defaultConfig.case_status;
+      
+      const investigationTitle = document.getElementById('investigation-title');
+      investigationTitle.style.fontSize = `${baseSize * 1.75}px`;
+      investigationTitle.textContent = config.investigation_title || defaultConfig.investigation_title;
+      
+      const sectionTitle = document.querySelector('.section-title');
+      sectionTitle.style.fontSize = `${baseSize * 2.25}px`;
+    }
+
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [
+          {
+            get: () => config.background_color || defaultConfig.background_color,
+            set: (value) => {
+              config.background_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ background_color: value });
+              }
+            }
+          },
+          {
+            get: () => config.surface_color || defaultConfig.surface_color,
+            set: (value) => {
+              config.surface_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ surface_color: value });
+              }
+            }
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (value) => {
+              config.text_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ text_color: value });
+              }
+            }
+          },
+          {
+            get: () => config.primary_action_color || defaultConfig.primary_action_color,
+            set: (value) => {
+              config.primary_action_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ primary_action_color: value });
+              }
+            }
+          },
+          {
+            get: () => config.secondary_action_color || defaultConfig.secondary_action_color,
+            set: (value) => {
+              config.secondary_action_color = value;
+              if (window.elementSdk) {
+                window.elementSdk.setConfig({ secondary_action_color: value });
+              }
+            }
+          }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (value) => {
+            config.font_family = value;
+            if (window.elementSdk) {
+              window.elementSdk.setConfig({ font_family: value });
+            }
+          }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (value) => {
+            config.font_size = value;
+            if (window.elementSdk) {
+              window.elementSdk.setConfig({ font_size: value });
+            }
+          }
+        }
+      };
+    }
+
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ["main_title", config.main_title || defaultConfig.main_title],
+        ["subtitle", config.subtitle || defaultConfig.subtitle],
+        ["case_number", config.case_number || defaultConfig.case_number],
+        ["case_status", config.case_status || defaultConfig.case_status],
+        ["investigation_title", config.investigation_title || defaultConfig.investigation_title]
+      ]);
+    }
+
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9a095d8350a5e515',t:'MTc2MzQ4ODgwNC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
